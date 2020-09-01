@@ -14,6 +14,7 @@ app.set('view-engine', 'ejs')
 app.set('port', process.env.PORT || 3000);
 app.use(express.urlencoded({ extended: false}))
 
+/*Ingreso de usuarios*/
 app.get('/', (req, res) => {
 	res.render('index.ejs')
 })
@@ -31,7 +32,18 @@ app.get('/chat/:name', (req, res) => {
 	res.render('chat.ejs', { name: req.params.name})
 })
 
-require('./sockets')(io, users);
+/**Conexion socket servidor */
+io.on('connection',socket => { // escucha cuando hay una nueva conexion de socket
+	console.log('Nuevo usuario conectado');
+	
+	socket.on('enviando mensaje',function (data) {   // cuando el cliente envie mensajes, tiene que recibir los datos
+		io.sockets.emit('nuevo mensaje',data); // envia a todos los sockets el dato 'mensaje'
+	});
+
+	socket.on('disconnect', function() {
+		console.log('Usuario desconectado');
+	});
+});
 
 /*envia archivos cuando inicia*/
 app.use(express.static(path.join(__dirname,'public'))); // envia la carpeta 'public' a los navegadores cuando se conecten al servidor
